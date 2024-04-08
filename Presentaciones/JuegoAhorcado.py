@@ -1,0 +1,132 @@
+# First we import the libraries
+
+from random import choice  # Random for random choices
+import tkinter as tk  # Tkinter for display a window
+
+# Here we got the possible words, which one of them, randomly, will be chosen
+words = ["baker", "dinosaur", "craftsman",
+         "orangutan", "elephant", "newsletter",
+         "building", "developer", "singer"]
+
+
+# Define the game as an object
+class HangmanGame:
+    def __init__(self, master):
+            self.master = master  # For window
+            self.master.title("Hangman Game")  # Game title
+            self.correct_letters = []  # Correct letters will be displayed
+            self.wrong_letters = []  # Wrong letters too
+            self.tries = 6  # Max of tries
+            self.hits = 0  # Game finished (win)
+            self.game_over = False  # Game finished (lose)
+
+            self.word, self.unique_letters = self.choose_word(words)  # Choose word
+
+            self.word_label = tk.Label(master, text=self.get_display_word(), font=("Arial", 15))
+            self.word_label.pack()  # This shows the hidden word as "---" at window
+
+            self.hints_label = tk.Label(master, text=self.get_hint(), font=("Arial", 20))
+            self.hints_label.pack()  # It gives a hint at window
+
+            self.incorrect_label = tk.Label(master, text="Incorrect letters: ", font=("Arial", 20))
+            self.incorrect_label.pack()  # It shows the incorrect letters at window
+
+            self.lives_label = tk.Label(master, text=f"Lives: {self.tries}", font=("Arial", 20))
+            self.lives_label.pack()  # Num of lives at window
+
+            self.entry_label = tk.Label(master, text="Enter a letter: ", font=("Arial", 20))
+            self.entry_label.pack()  # Enter a letter input at window
+
+            self.entry_var = tk.StringVar()
+            self.entry = tk.Entry(master, textvariable=self.entry_var, font=("Arial", 25))
+            self.entry.pack()  # Allows to enter a text as string at window
+
+            self.submit_button = tk.Button(master, text="Submit", command=self.submit_letter, font=("Arial", 25))
+            self.submit_button.pack()  # Submit button to submit the letter at window
+
+            self.restart_button = tk.Button(master, text="Restart", command=self.restart_game, font=("Arial", 25))
+            self.restart_button.pack()  # Restarts the game at window
+
+            self.update_labels()
+
+# Function to choose the word randomly and be shown as "--"
+    def choose_word(self, word_list):
+        chosen_word = choice(word_list)
+        unique_letters = len(set(chosen_word))
+        return chosen_word, unique_letters
+
+# Display the world with spaces between the letters
+    def get_display_word(self):
+        return ''.join([letter if letter in self.correct_letters else '_' for letter in self.word])
+
+# Shows hints for each word
+    def get_hint(self):
+        hints = {
+            "baker": "Gotta work very early to prepare the oven",
+            "dinosaur": "Don't move, it sees the movement",
+            "craftsman": "He will make you a boat or a house",
+            "orangutan": "Likes bananas and Tarzan",
+            "elephant": "Has a very good memory",
+            "newsletter": "Some of them are fake",
+            "building": "They collapse without maintenance",
+            "developer": "You're becoming one",
+            "singer": "I bet you're not very good"
+        }
+        return hints.get(self.word, "No hint available")
+
+    def update_labels(self):
+        self.word_label.config(text=self.get_display_word())
+        self.hints_label.config(text=f"Hint: " + self.get_hint(), font=("New Times Roman", 24))
+        self.incorrect_label.config(text="Incorrect letters: " + " ".join(self.wrong_letters), font=("New Times Roman", 24))
+        self.lives_label.config(text=f"Lives: {self.tries}", font=("New Times Roman", 24))
+
+    def submit_letter(self):
+        letter = self.entry_var.get().lower()
+
+        if letter.isalpha() and len(letter) == 1:
+            self.check_letter(letter)
+        else:
+            print("Please enter a valid letter.")
+
+        self.entry_var.set("")
+        self.update_labels()
+
+    def check_letter(self, chosen_letter):
+        if chosen_letter in self.correct_letters or chosen_letter in self.wrong_letters:
+            print("You have already used that letter, use another one")
+            self.tries -= 1
+        elif chosen_letter in self.word:
+            self.correct_letters.append(chosen_letter)
+            self.hits += 1
+        else:
+            self.wrong_letters.append(chosen_letter)
+            self.tries -= 1
+
+        if self.tries == 0:
+            self.game_over = self.lose()
+        elif self.hits == self.unique_letters:
+            self.game_over = self.win()
+
+    def lose(self):
+        print("You have run out of lives.")
+        print("The hidden word was: " + self.word)
+        return True
+
+    def win(self):
+        print("Congratulations, you have found the word!")
+        return True
+
+    def restart_game(self):
+        self.master.destroy()
+        root = tk.Tk()
+        game = HangmanGame(root)
+        root.mainloop()
+
+
+# Create the main window
+root = tk.Tk()
+# Create an instance of the HangmanGame class
+hangman_game = HangmanGame(root)
+
+# Start the GUI main loop
+root.mainloop()
